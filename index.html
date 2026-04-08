@@ -89,6 +89,7 @@ nav{margin-left:auto;display:flex;gap:.25rem;align-items:center}
 }
 .nav-link:hover,.nav-link.active{color:var(--text);background:var(--surface2)}
 .nav-link.active{color:var(--accent)}
+.skip-link{position: absolute; left: -9999px;} <!--keep the skip link off screen-->
 .theme-toggle{
   width:36px;height:36px;border-radius:8px;
   background:var(--surface2);
@@ -449,6 +450,7 @@ footer{
 </style>
 </head>
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a> <!--Skip link aids screen readers in jumping to important content-->
 <div id="app">
 
   <!-- ── HEADER ── -->
@@ -463,7 +465,7 @@ footer{
       <a href="#gallery"  class="nav-link">Gallery</a>
       <a href="#game"     class="nav-link">Game</a>
     </nav>
-    <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Switch to light theme">🌙</button> <!--switched Title to aria-label to improve screen reader accessibility-->
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
@@ -491,7 +493,7 @@ footer{
     </aside>
 
     <!-- ── MAIN ── -->
-    <main>
+    <main id="main-content"> <!--where the skip link jumps to-->
 
       <!-- MISSION -->
       <section id="mission">
@@ -572,8 +574,8 @@ footer{
           <div class="cal-header">
             <div class="cal-title" id="calMonthYear">March 2025</div>
             <div class="cal-nav">
-              <button class="cal-btn" id="calPrev">‹</button>
-              <button class="cal-btn" id="calNext">›</button>
+              <button class="cal-btn" id="calPrev" aria-label="Previous month">‹</button> <!--added aria-label for screen reader accessibility-->
+              <button class="cal-btn" id="calNext" aria-label="Next month">›</button>     <!--added aria-label for screen reader accessibility-->
             </div>
           </div>
           <div class="cal-grid" id="calGrid"></div>
@@ -667,6 +669,7 @@ themeToggle.addEventListener('click', () => {
   const isDark = html.dataset.theme === 'dark';
   html.dataset.theme = isDark ? 'light' : 'dark';
   themeToggle.textContent = isDark ? '🌙' : '☀️';
+  themeToggle.setAttribute('aria-label', isDark ? 'Switch to dark mode': 'Switch to light mode'); <!--added for screen reader to say the opposite of what is toggled-->
 });
 
 /* ═══════════════════════════════════════════════
