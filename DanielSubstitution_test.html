@@ -1,0 +1,415 @@
+<!doctype HTML>
+<html>
+    <head>
+        <script type="application/javascript">
+            var supportedLanguages = ["en-us","es-es","fr-fr","sv-se"];
+            var server = {
+                "en-us": {
+                    "title": "The Substitution Test",
+                    "welcome_message": "Hello user!",
+                    "description": "This is a test to test internationalization.",
+                    "home": "Home page",
+                    "theme": "Theme",
+                    "theme0": "Default",
+                    "theme1": "Dark",
+                    "theme2": "Warm",
+                    "theme3": "Blue",
+                    "theme4": "Hollow",
+                    "theme5": "Console",
+                    "lang": "Language",
+                    "lang_en-us": "English",
+                    "lang_es-es": "Spanish",
+                    "lang_fr-fr": "French",
+                    "lang_sv-se": "Swedish",
+                    "join": "Join"
+                },
+                "es-es": {
+                    "title": "La prueba de sustitución",
+                    "welcome_message": "¡Hola usuario!",
+                    "description": "Esta es una prueba para demostrar la internacionalización.",
+                    "home": "Página de inicio",
+                    "theme": "Tema",
+                    "theme0": "Por defecto",
+                    "theme1": "Oscuro",
+                    "theme2": "Cálido",
+                    "theme3": "Azul",
+                    "theme4": "Hueco",
+                    "theme5": "Consola",
+                    "lang": "Lenguaje",
+                    "lang_en-us": "Inglés",
+                    "lang_es-es": "Español",
+                    "lang_fr-fr": "Francés",
+                    "lang_sv-se": "Sueco",
+                    "join": "Unirse"
+                },
+                "fr-fr": {
+                    "title": "Test de substitution",
+                    "welcome_message": "Bonjour utilisateur !",
+                    "description": "Ceci est un test d'internationalisation.",
+                    "home": "Page d'accueil",
+                    "theme": "Thème",
+                    "theme0": "Par défaut",
+                    "theme1": "Sombre",
+                    "theme2": "Chaud",
+                    "theme3": "Bleu",
+                    "theme4": "Creux",
+                    "theme5": "Console",
+                    "lang": "Langue",
+                    "lang_en-us": "Anglais",
+                    "lang_es-es": "Espagnol",
+                    "lang_fr-fr": "Français",
+                    "lang_sv-se": "Suédois",
+                    "join": "Rejoindre"
+                },
+                "sv-se": {
+                    "title": "Substitutionstestet",
+                    "welcome_message": "Hej användare!",
+                    "description": "Detta är ett test för att testa internationalisering.",
+                    "home": "Startsida",
+                    "theme": "Tema",
+                    "theme0": "Standard",
+                    "theme1": "Mörk",
+                    "theme2": "Varm",
+                    "theme3": "Blå",
+                    "theme4": "Ihålig",
+                    "theme5": "Trösta",
+                    "lang": "Språk",
+                    "lang_en-us": "Engelska",
+                    "lang_es-es": "Spanska",
+                    "lang_fr-fr": "Franska",
+                    "lang_sv-se": "Svenska",
+                    "join": "Gå med"
+                },
+                "cards": [{
+                    "name": "Major_Flux",
+                    "image": "https://via.placeholder.com/200x150?text=Test+Image",
+                    "content": "I created this simple test page to test multiple technologies that may be implemented in my club's website."
+                }]
+            };
+            var data = {all: {}};
+            function fetchDataFromServer(){
+                /*
+                    This is a fake server request, because this is just a test.
+                */
+                return new Promise(resolve => {
+                    var d = server;
+                    // Grab language:
+                    var lang = localStorage.language.toLowerCase();
+                    var isFound = false;
+                    // Search for the language map in the object above:
+                    for(var op in d) if(op.includes(lang)){
+                        data.selected = d[op];
+                        isFound = true;
+                        break;
+                    }
+                    // If the language map isn't found, then...
+                    if(!isFound) data = d["en en-us"]; // ...it defaults to English
+                    data.all = d;
+                    // Simulates server response time:
+                    setTimeout(() => {
+                        resolve();
+                        console.log("Data retrieved");
+                    },Math.random() * 500);
+                });
+            }
+            function requireLanguage(tag){
+                return new Promise(resolve => {
+                    var lang = false;
+                    for(var op in server) if(op.includes(tag)) lang = server[op];
+                    if(!lang) throw new Error("Failed to find language");
+                    data.all[tag] = lang;
+                    data.selected = lang;
+                    setTimeout(() => {
+                        resolve();
+                        console.log("Data retrieved");
+                    },Math.random() * 500);
+                });
+            }
+            /*
+                The format function takes a string and a language map.
+                It then goes over every entry in the language map and replaces variables in the string as needed.
+                Ex:
+                    HTML: "<p>$name_msg Adam.</p>"
+                    JSON: {"name_msg": "Me llamo es"}
+                Result:
+                    HTML: "<p>Me llamo es Adam.</p>"
+            */
+            function format(str,d){
+                for(var i in d){
+                    var r = new RegExp(`\\\$${i}`,"gi");
+                    str = str.replace(r,d[i]);
+                }
+                return(str);
+            }
+            /*
+                The applyTheme function takes a theme name and applies it.
+                Themes are defined in CSS, utilizing CSS variables.
+                Each theme is a class that is applied to the <body> element.
+                To apply the theme, remove the current theme (if applicable) and put the new one on.
+                It also stores the theme in localStorage to save it as a preference.
+            */
+            function applyTheme(name){
+                if(data.theme) document.body.classList.remove(data.theme);
+                document.body.classList.add(name);
+                data.theme = name;
+                localStorage.theme = name;
+            }
+            /*
+                The applyLanguage function takes a language tag (or set of such).
+                It then replaces the current language map with the new one.
+                Afterwards it goes through the list of elements that has a data-name attribute and sets its inner content to the corresponding value on the language map.
+                Multiple elements with the same data-name value can work.
+                Much like applyTheme, it stores the preference in localStorage.
+            */
+            async function applyLanguage(name){
+                if(!data.all[name]) await requireLanguage(name);
+                data.selected = data.all[name];
+                localStorage.language = name;
+                document.querySelectorAll("[data-name]").forEach(e => {
+                    e.innerHTML = data.selected[e.dataset.name];
+                });
+            }
+            function makeCard(j){
+                var container = document.createElement("div");
+                container.innerHTML = format("<h2>$name</h2><img src=\"$image\"/><p>$content</p>",j);
+                container.classList.add("card");
+                return(container);
+            }
+            window.onload = async function(){
+                // If there's a language preference, keep it
+                // Else check if grabbing the browser's display language tag is applicable and use that
+                // Else just use English
+                localStorage.language = localStorage.language ?? navigator.language.toLowerCase() ?? "en-us";
+                await requireLanguage(localStorage.language);
+                // Obtain a language map from the server
+                // Other language maps are obtained as well in case the user wants to change their preference
+                for(var lang of supportedLanguages){
+                    // Create language options based on what language maps are available
+                    var line = document.createElement("option");
+                    line.dataset.name = "lang_" + lang.replace(/\s/g,"_");
+                    line.value = lang;
+                    document.getElementById("lang").appendChild(line);
+                }
+                // The language select element must be initiated with the right value
+                document.getElementById("lang").value = localStorage.language;
+                // Run the first sweep to apply the language map to the whole page
+                document.querySelectorAll("[data-name]").forEach(e => {
+                    e.innerHTML = data.selected[e.dataset.name];
+                });
+                // Apply the theme from preferences on load if applicable, or apply the default them if not
+                applyTheme(localStorage.theme ?? "default");
+                // Also make sure to keep the theme select element updated to display the theme actually being used
+                document.getElementById("theme").value = data.theme;
+                for(var card of server["cards"]){
+                    document.getElementById("card-list").appendChild(makeCard(card));
+                }
+                // The body is invisible at start to hide everything until the page is ready to be viewed
+                document.body.style.opacity = 1;
+            };
+        </script>
+        <style>
+            /* Below is the list of available themes to choose from */
+            body.default{
+                --bg: white;
+                --text: black;
+                --accent: blue;
+                --links: blue;
+                --button: blue;
+                --buttonText: white;
+                --font: arial;
+            }
+            body.dark{
+                --bg: #222222;
+                --text: #cccccc;
+                --accent: #00ff88;
+                --links: #4488ff;
+                --button: #00ff88;
+                --buttonText: black;
+                --font: arial;
+            }
+            body.warm{
+                --bg: #ffcc88;
+                --text: black;
+                --accent: #000000;
+                --links: #884400;
+                --button: #884400;
+                --buttonText: #ffcc88;
+                --font: cursive;
+            }
+            body.blue{
+                --bg: #000088;
+                --text: white;
+                --accent: #888888;
+                --links: #00ffff;
+                --button: #666666;
+                --buttonText: white;
+                --font: cursive;
+            }
+            body.hollow{
+                --bg: #1a0844;
+                --text: white;
+                --accent: #000000;
+                --links: #b360f8;
+                --button: #b360f8;
+                --buttonText: black;
+                --font: times;
+            }
+            body.console{
+                --bg: black;
+                --text: white;
+                --accent: white;
+                --links: lime;
+                --button: lime;
+                --buttonText: black;
+                --font: monospace;
+            }
+            body{
+                background: var(--bg);
+                color: var(--text);
+                overflow: hidden;
+                --barHeight: 75px; /* The bar height might need to change at any time, this makes it easy */
+                font-family: var(--font);
+                opacity: 0;
+            }
+            #bar{
+                background: var(--bg);
+                border-bottom: 1px solid var(--accent);
+                padding: 10px;
+                padding-top: 0px;
+                box-sizing: border-box;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+                width: 100vw;
+                height: var(--barHeight);
+                line-height: calc(var(--barHeight) / 2);
+                z-index: 99;
+                box-shadow: 0px 2px 4px 0px #00000044;
+            }
+            #bar > *{
+                display: inline-block;
+                vertical-align: middle;
+            }
+            .bar-sep{
+                width: 1px;
+                height: var(--barHeight);
+                background: var(--accent);
+            }
+            #content{
+                background: var(--bg);
+                padding: 50px;
+                box-sizing: border-box;
+                position: absolute;
+                bottom: 0px;
+                left: 0px;
+                width: 100vw;
+                height: calc(100vh - var(--barHeight));
+                overflow: auto;
+            }
+            /* Might be a good idea to use some SVG elements as buttons */
+            svg.button{
+                vertical-align: middle;
+            }
+            svg.button:hover{
+                cursor: pointer;
+                box-shadow: 0px 2px 4px 0px #00000088;
+            }
+            svg.button:active{
+                box-shadow: none;
+            }
+            select, input{
+                background: none;
+                color: var(--text);
+                border: none;
+                border-bottom: 1px solid var(--text);
+            }
+            select:focus, input:focus{
+                border-bottom-color: var(--accent);
+            }
+            option{
+                background: var(--bg);
+                color: var(--text);
+            }
+            option:checked{
+                color: var(--links);
+            }
+            /* Make sure every hyperlinked object has the theme's link color */
+            [href]{
+                color: var(--links);
+                text-decoration: none;
+            }
+            [href]:hover{
+                text-decoration: underline;
+            }
+            button{
+                background: var(--bg);
+                color: var(--text);
+                border: 1px solid var(--text);
+                border-radius: 5px;
+                box-shadow: 0px 1px 2px 0px #00000044;
+                padding: 10px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+            button:hover:not(:active){
+                background: var(--button);
+                color: var(--buttonText);
+                border: 1px solid var(--button);
+                box-shadow: 0px 2px 4px 0px #00000088;
+            }
+            button:active{
+                box-shadow: none;
+            }
+            .card{
+                width: 200px;
+                height: 200px;
+                overflow: auto;
+                background: var(--bg);
+                border: 1px solid var(--accent);
+                box-shadow: 0px 1px 2px 0px #00000044;
+                border-radius: 10px;
+                padding: 10px;
+                box-sizing: border-box;
+                display: inline-block;
+                vertical-align: top;
+            }
+            .card > h2{
+                text-align: center;
+            }
+            .card > img{
+                width: 100%;
+            }
+            .card::-webkit-scrollbar{
+                appearance: none;
+            }
+        </style>
+    </head>
+    <body class="default">
+        <div id="bar">
+            <svg width="calc(var(--barHeight) / 2)" height="calc(var(--barHeight) / 2)" viewBox="0 0 100 100" class="button">
+                <rect x="0" y="0" width="98" height="100" fill="var(--bg)" stroke="var(--text)" stroke-width="2"/>
+                <path d="M25,25 L75,25 M25,50 L75,50 M25,75 L75,75" fill="none" stroke="var(--text)" stroke-width="8"/>
+            </svg>
+            <h2 data-name="title"></h2>
+            <div class="bar-sep"></div>
+            <p><span data-name="theme"></span>:</p>
+            <select id="theme" onchange="applyTheme(this.value);">
+                <option data-name="theme0" value="default"></option>
+                <option data-name="theme1" value="dark"></option>
+                <option data-name="theme2" value="warm"></option>
+                <option data-name="theme3" value="blue"></option>
+                <option data-name="theme4" value="hollow"></option>
+                <option data-name="theme5" value="console"></option>
+            </select>
+            <p><span data-name="lang"></span>:</p>
+            <select id="lang" onchange="applyLanguage(this.value);"></select>
+        </div>
+        <div id="content">
+            <h2 data-name="welcome_message"></h2>
+            <p data-name="description"></p>
+            <p><a data-name="home" href="javascript:void(0);"></a></p>
+            <p><button data-name="join"></button></p>
+            <div id="card-list"></div>
+        </div>
+    </body>
+</html>
